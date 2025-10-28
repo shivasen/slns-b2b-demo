@@ -31,7 +31,7 @@
   }
   
   .card-hover {
-    @apply hover:shadow-md hover:-translate-y-1;
+    @apply hover:shadow-lg hover:-translate-y-1;
   }
   
   .input-field {
@@ -56,5 +56,20 @@
   
   .badge-accent {
     @apply badge bg-primary-100 text-primary-800;
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .truncate-2-lines {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 }

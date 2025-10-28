@@ -1,5 +1,6 @@
 import { getProductById, createProduct, updateProduct } from '../utils/api.js';
 import { navigate } from '../main.js';
+import { showToast } from '../utils/toast.js';
 
 export async function renderAdminProductForm() {
   const container = document.createElement('div');
@@ -27,7 +28,6 @@ export async function renderAdminProductForm() {
       
       <div class="card">
         <form id="product-form" class="space-y-6">
-          <div id="error-message" class="hidden p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -92,13 +92,11 @@ export async function renderAdminProductForm() {
   setTimeout(() => {
     const form = container.querySelector('#product-form');
     const submitBtn = container.querySelector('#submit-btn');
-    const errorMessage = container.querySelector('#error-message');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
-      errorMessage.classList.add('hidden');
 
       const productData = {
         name: form.querySelector('#name').value,
@@ -122,12 +120,11 @@ export async function renderAdminProductForm() {
       }
 
       if (error) {
-        errorMessage.textContent = error.message;
-        errorMessage.classList.remove('hidden');
+        showToast(error.message, { type: 'error' });
         submitBtn.disabled = false;
         submitBtn.textContent = isEditing ? 'Save Changes' : 'Create Product';
       } else {
-        alert(`Product ${isEditing ? 'updated' : 'created'} successfully!`);
+        showToast(`Product ${isEditing ? 'updated' : 'created'} successfully!`, { type: 'success' });
         navigate('/admin');
         // Set a flag to force the admin page to reload the products view
         sessionStorage.setItem('admin_view', 'products');

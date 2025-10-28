@@ -1,4 +1,5 @@
 import './style.css';
+import 'toastify-js/src/toastify.css';
 import { renderNavigation } from './components/navigation.js';
 import { renderHomePage } from './pages/home.js';
 import { renderProductCatalog } from './pages/catalog.js';
@@ -13,8 +14,10 @@ import { renderAbout } from './pages/about.js';
 import { renderContact } from './pages/contact.js';
 import { renderCheckout } from './pages/checkout.js';
 import { renderOrderConfirmation } from './pages/order-confirmation.js';
+import { renderOrderDetail } from './pages/order-detail.js';
+import { renderTermsPage } from './pages/terms.js';
+import { renderPrivacyPage } from './pages/privacy.js';
 import { initializeCart } from './utils/cart.js';
-import { supabase } from './utils/supabase.js';
 import { getUser, isUserAdmin, getUserProfile } from './utils/auth.js';
 
 const app = document.getElementById('app');
@@ -34,6 +37,9 @@ const routes = {
   '/contact': renderContact,
   '/checkout': renderCheckout,
   '/order-confirmation': renderOrderConfirmation,
+  '/order': renderOrderDetail,
+  '/terms': renderTermsPage,
+  '/privacy': renderPrivacyPage,
 };
 
 function showLoading() {
@@ -53,7 +59,8 @@ async function router() {
   const user = await getUser();
   
   // Protected routes
-  if ((basePath === '/dashboard' || basePath === '/checkout' || basePath === '/order-confirmation') && !user) {
+  const protectedRoutes = ['/dashboard', '/checkout', '/order-confirmation', '/order'];
+  if (protectedRoutes.includes(basePath) && !user) {
     navigate('/login');
     return;
   }
@@ -91,7 +98,14 @@ async function router() {
 }
 
 window.addEventListener('hashchange', router);
-window.addEventListener('cart-change', router);
+window.addEventListener('cart-change', async () => {
+    // Re-render only the navigation on cart change to update the count
+    const newNav = await renderNavigation();
+    const oldNav = document.querySelector('header');
+    if (oldNav) {
+        oldNav.parentNode.replaceChild(newNav, oldNav);
+    }
+});
 
 // Initial load
 window.addEventListener('load', () => {
@@ -99,8 +113,8 @@ window.addEventListener('load', () => {
   router();
   
   // Listen for auth changes to re-render UI
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth state changed:', event);
+  window.addEventListener('auth-change', () => {
+    console.log('Auth state changed event received.');
     router();
   });
 });

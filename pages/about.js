@@ -1,57 +1,72 @@
 export function renderAbout() {
   const container = document.createElement('div');
-  container.className = 'min-h-screen bg-neutral-50';
+  container.className = 'min-h-screen bg-white';
   
   container.innerHTML = `
     <!-- Hero -->
-    <div class="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-20">
-      <div class="container mx-auto px-4 text-center">
-        <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">About SLNS</h1>
-        <p class="text-lg max-w-2xl mx-auto text-white/90">
-          Your trusted partner for premium Indian ethnic wear since 2015
+    <div class="relative bg-neutral-800 text-white py-24 md:py-32">
+      <div class="absolute inset-0">
+        <img src="https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=1974&auto=format&fit=crop" class="w-full h-full object-cover opacity-20" alt="Artisan weaving fabric"/>
+      </div>
+      <div class="container mx-auto px-4 text-center relative">
+        <p class="text-primary-400 font-semibold mb-2">Our Journey</p>
+        <h1 class="text-4xl md:text-6xl font-extrabold mb-4">Weaving Tradition with Trust</h1>
+        <p class="text-lg max-w-3xl mx-auto text-neutral-300">
+          Connecting India's finest artisans with retailers like you since 2015.
         </p>
       </div>
     </div>
     
-    <!-- Content -->
-    <div class="container mx-auto px-4 py-16">
-      <div class="max-w-4xl mx-auto">
-        <div class="card mb-8">
-          <h2 class="font-serif text-2xl font-bold text-neutral-800 mb-4">Our Story</h2>
-          <p class="text-neutral-600 mb-4">
-            Founded in 2015 in the heart of Chennai, SLNS (Sarees, Lehengas, and Native Styles) began with a vision to bridge the gap between traditional craftsmanship and modern business needs. We recognized that retailers and boutiques needed a reliable, quality-focused B2B partner for Indian ethnic wear.
-          </p>
-          <p class="text-neutral-600">
-            Today, we serve over 500+ retailers across India, offering an extensive collection of sarees, churidars, half sarees, pavadai davani, and traditional dhotis. Our commitment to quality, authenticity, and customer service has made us a preferred B2B partner in the ethnic wear industry.
-          </p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          ${[
-            { title: 'Quality First', desc: 'Every piece undergoes rigorous quality checks', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { title: 'Fair Pricing', desc: 'Competitive wholesale rates with transparent pricing', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { title: 'Fast Delivery', desc: 'Quick dispatch and reliable logistics network', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }
-          ].map(value => `
-            <div class="card text-center">
-              <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${value.icon}"/>
-                </svg>
-              </div>
-              <h3 class="font-semibold text-lg text-neutral-800 mb-2">${value.title}</h3>
-              <p class="text-sm text-neutral-600">${value.desc}</p>
+    <!-- Story Section -->
+    <div class="py-16 lg:py-24">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 class="text-3xl font-bold text-neutral-800 mb-4">From Chennai, With Passion</h2>
+            <p class="text-neutral-600 mb-4">
+              Founded in 2015, SLNS (Sarees, Lehengas, and Native Styles) began with a simple vision: to bridge the gap between traditional craftsmanship and modern retail. We saw the need for a reliable B2B partner who valued quality and authenticity as much as our retailers did.
+            </p>
+            <p class="text-neutral-600 mb-6">
+              Starting from a small office in Chennai, we've grown into a trusted platform serving over 500 retailers across India. Our journey is one of passion for ethnic wear and commitment to the businesses we serve.
+            </p>
+            <div class="flex gap-4">
+                <a href="#/contact" class="btn-primary">Partner With Us</a>
+                <a href="#/catalog" class="btn-outline">Explore Products</a>
             </div>
-          `).join('')}
-        </div>
-        
-        <div class="card bg-primary-50 border-2 border-primary-200 text-center">
-          <h3 class="font-serif text-2xl font-bold text-primary-900 mb-4">Manufacturing Process</h3>
-          <p class="text-neutral-700 mb-6">
-            We work directly with artisans and weavers across Tamil Nadu, Karnataka, and Andhra Pradesh to bring you authentic, handcrafted ethnic wear. Our manufacturing process combines traditional techniques with modern quality standards.
-          </p>
-          <a href="#/contact" class="btn-primary inline-block">Partner With Us</a>
+          </div>
+          <div class="grid grid-cols-2 gap-6">
+            <div class="card text-center"><p class="text-4xl font-bold text-primary-600">500+</p><p class="text-neutral-600">Retail Partners</p></div>
+            <div class="card text-center"><p class="text-4xl font-bold text-primary-600">3+</p><p class="text-neutral-600">States Sourced</p></div>
+            <div class="card text-center"><p class="text-4xl font-bold text-primary-600">1,200+</p><p class="text-neutral-600">Unique Products</p></div>
+            <div class="card text-center"><p class="text-4xl font-bold text-primary-600">2015</p><p class="text-neutral-600">Year Founded</p></div>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- Our Values Section -->
+    <div class="py-16 lg:py-24 bg-neutral-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-neutral-800 mb-4">Our Core Principles</h2>
+                <p class="text-neutral-600 max-w-2xl mx-auto">These values guide every decision we make and every partnership we build.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              ${[
+                { title: 'Uncompromising Quality', desc: 'Every piece is hand-inspected to ensure it meets our highest standards of craftsmanship.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />' },
+                { title: 'Transparent Pricing', desc: 'Fair, competitive wholesale rates with no hidden fees, empowering your business to thrive.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />' },
+                { title: 'Reliable Partnership', desc: 'We see ourselves as an extension of your team, dedicated to your success with fast delivery and support.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />' }
+              ].map(value => `
+                <div class="text-center">
+                  <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">${value.icon}</svg>
+                  </div>
+                  <h3 class="font-semibold text-lg text-neutral-800 mb-2">${value.title}</h3>
+                  <p class="text-sm text-neutral-600">${value.desc}</p>
+                </div>
+              `).join('')}
+            </div>
+        </div>
     </div>
   `;
   

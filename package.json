@@ -9,12 +9,16 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.76.1"
+    "chart.js": "^4.4.3",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
+    "toastify-js": "^1.12.0"
   }
 }

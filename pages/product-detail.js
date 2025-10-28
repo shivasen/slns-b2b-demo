@@ -1,6 +1,6 @@
 import { addToCart } from '../utils/cart.js';
 import { getProductById } from '../utils/api.js';
-import { renderNavigation } from '../components/navigation.js';
+import { showToast } from '../utils/toast.js';
 
 export async function renderProductDetail() {
   const params = new URLSearchParams(window.location.hash.split('?')[1]);
@@ -137,12 +137,7 @@ export async function renderProductDetail() {
   window.handleAddToCart = () => {
     const qty = parseInt(document.getElementById('quantity').value);
     addToCart({ ...product, quantity: qty });
-    
-    renderNavigation().then(nav => {
-        const oldNav = document.querySelector('header');
-        oldNav.parentNode.replaceChild(nav, oldNav);
-    });
-    alert(`Added ${qty} units to cart!`);
+    showToast(`Added ${qty} units of ${product.name} to cart!`, { type: 'success' });
   };
   
   return container;

@@ -1,176 +1,199 @@
-import { supabase } from './supabase.js';
+import { db } from './mock-db.js';
+import { getUser, isUserAdmin } from './auth.js';
+
+const delay = (ms = 100) => new Promise(res => setTimeout(res, ms));
 
 export async function getProducts(filters = {}) {
-  let query = supabase.from('products').select('*');
+  await delay();
+  let results = [...db.products];
+  const { category, limit, search } = filters;
   
-  if (filters.category && filters.category !== 'All') {
-    query = query.eq('category', filters.category);
+  if (category && category !== 'All') {
+    results = results.filter(p => p.category === category);
+  }
+
+  if (search) {
+    const lowercasedSearch = search.toLowerCase();
+    results = results.filter(p => 
+      p.name.toLowerCase().includes(lowercasedSearch) ||
+      p.category.toLowerCase().includes(lowercasedSearch)
+    );
+  }
+
+  if (limit) {
+    results = results.slice(0, limit);
   }
   
-  const { data, error } = await query.order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching products:', error);
-    return [];
-  }
-  return data;
+  return results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
 export async function getProductById(id) {
+  await delay();
   if (!id || isNaN(parseInt(id))) {
     console.error('Invalid product ID');
     return null;
   }
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', id)
-    .single();
-    
-  if (error) {
-    console.error(`Error fetching product ${id}:`, error);
-    return null;
-  }
-  return data;
+  const product = db.products.find(p => p.id === id);
+  return product || null;
 }
 
 export async function createProduct(productData) {
-    const { data, error } = await supabase.from('products').insert([productData]).select();
-    if (error) console.error('Error creating product:', error);
-    return { data, error };
+    await delay(300);
+    const newId = Math.max(...db.products.map(p => p.id)) + 1;
+    const newProduct = {
+      id: newId,
+      created_at: new Date().toISOString(),
+      ...productData
+    };
+    db.products.unshift(newProduct);
+    return { data: [newProduct], error: null };
 }
 
 export async function updateProduct(id, productData) {
-    const { data, error } = await supabase.from('products').update(productData).eq('id', id).select();
-    if (error) console.error('Error updating product:', error);
-    return { data, error };
+    await delay(300);
+    const index = db.products.findIndex(p => p.id === id);
+    if (index === -1) return { data: null, error: { message: 'Product not found' } };
+    db.products[index] = { ...db.products[index], ...productData };
+    return { data: [db.products[index]], error: null };
 }
 
 export async function deleteProduct(id) {
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) console.error('Error deleting product:', error);
-    return { error };
+    await delay(300);
+    const index = db.products.findIndex(p => p.id === id);
+    if (index > -1) {
+      db.products.splice(index, 1);
+    }
+    return { error: null };
 }
 
 export async function getPendingRegistrations() {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('approved', false)
-        .order('created_at', { ascending: true });
-
-    if (error) {
-        console.error('Error fetching pending registrations:', error);
-        return [];
-    }
-    return data;
+    await delay();
+    return db.users
+      .filter(u => !u.approved)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 }
 
 export async function approveRegistration(userId) {
-    const { data, error } = await supabase
-        .from('profiles')
-        .update({ approved: true, approved_at: new Date().toISOString() })
-        .eq('id', userId)
-        .select();
-    
-    if (error) {
-        console.error('Error approving registration:', error);
+    await delay(200);
+    const user = db.users.find(u => u.id === userId);
+    if (user) {
+      user.approved = true;
+      user.approved_at = new Date().toISOString();
     }
-    return { data, error };
+    return { data: [user], error: null };
 }
 
 export async function rejectRegistration(userId) {
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-    
-    if (profileError) {
-        console.error('Error deleting profile:', profileError);
-        return { error: profileError };
+    await delay(200);
+    const index = db.users.findIndex(u => u.id === userId);
+    if (index > -1) {
+      db.users.splice(index, 1);
     }
-
-    // Also delete the user from auth schema
-    const { error: userError } = await supabase.auth.admin.deleteUser(userId);
-    if (userError) {
-        console.error('Error deleting auth user:', userError);
-    }
-    
-    return { error: userError };
+    // No need to delete from auth in mock
+    return { error: null };
 }
 
 export async function createOrder(orderData) {
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      user_id: orderData.userId,
-      total_amount: orderData.total,
-      status: 'Pending',
-      shipping_address: orderData.shippingAddress
-    })
-    .select()
-    .single();
-
-  if (orderError) {
-    console.error('Error creating order:', orderError);
-    return { error: orderError };
-  }
+  await delay(500);
+  const newOrderId = Math.max(...db.orders.map(o => o.id), 0) + 1;
+  const userProfile = db.users.find(u => u.id === orderData.userId);
 
   const orderItems = orderData.cart.map(item => ({
-    order_id: order.id,
+    order_id: newOrderId,
     product_id: item.id,
     quantity: item.quantity,
-    price: item.price
+    price: item.price,
+    products: db.products.find(p => p.id === item.id) // simulate join
   }));
 
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems);
-  
-  if (itemsError) {
-    console.error('Error creating order items:', itemsError);
-    // Here you might want to delete the order that was just created
-    return { error: itemsError };
-  }
+  const newOrder = {
+    id: newOrderId,
+    user_id: orderData.userId,
+    total_amount: orderData.total,
+    status: 'Pending',
+    shipping_address: orderData.shippingAddress,
+    created_at: new Date().toISOString(),
+    profiles: userProfile, // simulate join
+    order_items: orderItems,
+  };
 
-  return { data: order };
+  db.orders.unshift(newOrder);
+  return { data: newOrder, error: null };
 }
 
 export async function getOrdersForUser(userId) {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching user orders:', error);
-    return [];
-  }
-  return data;
+  await delay();
+  return db.orders
+    .filter(o => o.user_id === userId)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
 export async function getAllOrders() {
-    const { data, error } = await supabase
-        .from('orders')
-        .select('*, profiles(company_name)')
-        .order('created_at', { ascending: false });
-    
-    if (error) {
-        console.error('Error fetching all orders:', error);
-        return [];
-    }
-    return data;
+    await delay();
+    return db.orders
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+export async function getOrderDetails(orderId) {
+  await delay();
+  const user = await getUser();
+  const isAdmin = await isUserAdmin();
+
+  const order = db.orders.find(o => o.id === orderId);
+
+  if (!order) return { data: null, error: { message: 'Order not found' } };
+
+  // Non-admins can only see their own orders
+  if (!isAdmin && order.user_id !== user.id) {
+    return { data: null, error: { message: 'Access denied' } };
+  }
+
+  return { data: order, error: null };
 }
 
 export async function updateOrderStatus(orderId, status) {
-    const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId);
-    
-    if (error) {
-        console.error('Error updating order status:', error);
+    await delay(150);
+    const order = db.orders.find(o => o.id === orderId);
+    if (order) {
+      order.status = status;
     }
-    return { data, error };
+    return { data: [order], error: null };
+}
+
+export async function getShippingAddresses(userId) {
+  await delay();
+  return db.shipping_addresses
+    .filter(a => a.user_id === userId)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+export async function addShippingAddress(addressData) {
+  await delay(200);
+  const newId = Math.max(...db.shipping_addresses.map(a => a.id), 0) + 1;
+  const newAddress = {
+    id: newId,
+    created_at: new Date().toISOString(),
+    ...addressData
+  };
+  db.shipping_addresses.unshift(newAddress);
+  return { data: newAddress, error: null };
+}
+
+export async function deleteShippingAddress(addressId) {
+  await delay(200);
+  const index = db.shipping_addresses.findIndex(a => a.id === addressId);
+  if (index > -1) {
+    db.shipping_addresses.splice(index, 1);
+  }
+  return { error: null };
+}
+
+export async function setDefaultShippingAddress(userId, addressId) {
+  await delay(150);
+  const user = db.users.find(u => u.id === userId);
+  if (user) {
+    const address = db.shipping_addresses.find(a => a.id === addressId);
+    user.default_shipping_address = address; // Store full object
+  }
+  return { error: null };
 }

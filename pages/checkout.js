@@ -1,7 +1,8 @@
-import { getCart, getCartTotal, clearCart } from '../utils/cart.js';
+import { getCart, clearCart } from '../utils/cart.js';
 import { getUserProfile } from '../utils/auth.js';
-import { createOrder } from '../utils/api.js';
+import { createOrder, getShippingAddresses, addShippingAddress } from '../utils/api.js';
 import { navigate } from '../main.js';
+import { showToast } from '../utils/toast.js';
 
 export async function renderCheckout() {
   const container = document.createElement('div');
@@ -14,6 +15,9 @@ export async function renderCheckout() {
     navigate('/catalog');
     return container;
   }
+  
+  const savedAddresses = await getShippingAddresses(profile.id);
+  const defaultAddress = profile.default_shipping_address;
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const gst = subtotal * 0.18;
@@ -29,6 +33,24 @@ export async function renderCheckout() {
           <form id="checkout-form">
             <fieldset class="mb-8">
               <legend class="font-bold text-lg mb-4 w-full border-b pb-2">Shipping Address</legend>
+              
+              ${savedAddresses.length > 0 ? `
+                <div class="mb-6">
+                  <label class="block text-sm font-medium text-neutral-700 mb-2">Select a saved address:</label>
+                  <div id="saved-addresses-list" class="space-y-2">
+                    ${savedAddresses.map(addr => `
+                      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer has-[:checked]:bg-primary-50 has-[:checked]:border-primary-400">
+                        <input type="radio" name="saved_address" value="${addr.id}" class="text-primary-500 focus:ring-primary-400"/>
+                        <span class="text-sm">
+                          <span class="font-semibold">${addr.address_line_1}</span>
+                          <p class="text-neutral-600">${addr.city}, ${addr.state} - ${addr.pincode}</p>
+                        </span>
+                      </label>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-neutral-700 mb-1">Company Name</label>
@@ -36,22 +58,28 @@ export async function renderCheckout() {
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-neutral-700 mb-1">Shipping Address Line 1 *</label>
-                  <input id="address1" type="text" required class="input-field" placeholder="Street, P.O. box, etc."/>
+                  <input id="address1" type="text" required class="input-field" placeholder="Street, P.O. box, etc." value="${defaultAddress?.address_line_1 || ''}"/>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-neutral-700 mb-1">City *</label>
-                  <input id="city" type="text" required class="input-field"/>
+                  <input id="city" type="text" required class="input-field" value="${defaultAddress?.city || ''}"/>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-neutral-700 mb-1">State *</label>
-                    <input id="state" type="text" required class="input-field"/>
+                    <input id="state" type="text" required class="input-field" value="${defaultAddress?.state || ''}"/>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-neutral-700 mb-1">Pincode *</label>
-                    <input id="pincode" type="text" required class="input-field"/>
+                    <input id="pincode" type="text" required class="input-field" value="${defaultAddress?.pincode || ''}"/>
                   </div>
                 </div>
+              </div>
+              <div class="mt-6">
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" id="save-address" class="rounded text-primary-500 focus:ring-primary-400"/>
+                  <span class="text-sm font-medium text-neutral-600">Save this address for future orders</span>
+                </label>
               </div>
             </fieldset>
             
@@ -113,17 +141,43 @@ export async function renderCheckout() {
   setTimeout(() => {
     const form = container.querySelector('#checkout-form');
     const submitBtn = container.querySelector('#place-order-btn');
+    
+    const savedAddressesList = container.querySelector('#saved-addresses-list');
+    if (savedAddressesList) {
+      savedAddressesList.addEventListener('change', (e) => {
+        if (e.target.name === 'saved_address') {
+          const selectedAddressId = parseInt(e.target.value);
+          const selectedAddress = savedAddresses.find(addr => addr.id === selectedAddressId);
+          if (selectedAddress) {
+            form.querySelector('#address1').value = selectedAddress.address_line_1 || '';
+            form.querySelector('#city').value = selectedAddress.city || '';
+            form.querySelector('#state').value = selectedAddress.state || '';
+            form.querySelector('#pincode').value = selectedAddress.pincode || '';
+          }
+        }
+      });
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
       submitBtn.textContent = 'Placing Order...';
 
       const shippingAddress = {
-        address1: form.querySelector('#address1').value,
+        address_line_1: form.querySelector('#address1').value,
         city: form.querySelector('#city').value,
         state: form.querySelector('#state').value,
         pincode: form.querySelector('#pincode').value,
       };
+
+      const saveAddressCheckbox = form.querySelector('#save-address');
+      if (saveAddressCheckbox.checked) {
+        await addShippingAddress({
+          user_id: profile.id,
+          ...shippingAddress
+        });
+        showToast('Shipping address saved!', { type: 'success' });
+      }
 
       const orderData = {
         userId: profile.id,
@@ -135,7 +189,7 @@ export async function renderCheckout() {
       const { data: order, error } = await createOrder(orderData);
 
       if (error) {
-        alert('There was an error placing your order. Please try again.');
+        showToast('There was an error placing your order. Please try again.', { type: 'error' });
         submitBtn.disabled = false;
         submitBtn.textContent = 'Place Order';
       } else {
