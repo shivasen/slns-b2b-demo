@@ -7,6 +7,19 @@ export function renderLogin() {
   
   container.innerHTML = `
     <div class="max-w-md w-full">
+      <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="card p-4 text-sm bg-blue-50 border-blue-200">
+          <h3 class="font-bold text-blue-800 mb-2">Admin Login</h3>
+          <p class="text-blue-700"><strong>Email:</strong> admin@slns.in</p>
+          <p class="text-blue-700"><strong>Pass:</strong> password123</p>
+        </div>
+        <div class="card p-4 text-sm bg-green-50 border-green-200">
+          <h3 class="font-bold text-green-800 mb-2">Retailer Login</h3>
+          <p class="text-green-700"><strong>Email:</strong> user@slns.in</p>
+          <p class="text-green-700"><strong>Pass:</strong> password123</p>
+        </div>
+      </div>
+
       <div class="card">
         <div class="text-center mb-8">
           <h1 class="text-3xl font-bold text-neutral-900 mb-2">Welcome Back</h1>
